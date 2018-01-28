@@ -37,7 +37,7 @@ public final class BinanceTicker24h {
   // The cached ticker
   private Ticker ticker;
 
-  BinanceTicker24h(@JsonProperty("priceChange") BigDecimal priceChange
+  public BinanceTicker24h(@JsonProperty("priceChange") BigDecimal priceChange
       , @JsonProperty("priceChangePercent") BigDecimal priceChangePercent
       , @JsonProperty("weightedAvgPrice") BigDecimal weightedAvgPrice
       , @JsonProperty("prevClosePrice") BigDecimal prevClosePrice
@@ -171,6 +171,7 @@ public final class BinanceTicker24h {
     if (ticker == null) {
       ticker = new Ticker.Builder()
           .currencyPair(pair)
+          .open(openPrice)
           .ask(askPrice)
           .bid(bidPrice)
           .last(lastPrice)
