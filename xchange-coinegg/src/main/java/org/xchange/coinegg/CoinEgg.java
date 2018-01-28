@@ -28,4 +28,5 @@ public interface CoinEgg {
   @Path("orders?coin={symbol}")
   CoinEggOrder[] getOrders(@PathParam("symbol") String symbol) throws IOException;
   
+  
 }
