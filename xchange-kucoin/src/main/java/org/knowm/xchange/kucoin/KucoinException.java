@@ -1,52 +1,87 @@
 package org.knowm.xchange.kucoin;
 
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import java.util.HashMap;
+import java.util.Map;
 import si.mazi.rescu.HttpStatusExceptionSupport;
 
-/**
- * @author Jan Akerman
- */
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonPropertyOrder({"code", "msg", "success", "timestamp"})
 public class KucoinException extends HttpStatusExceptionSupport {
 
-  private final Long timestamp;
-  private final int status;
-  private final String error;
-  private final String message;
-  private final String path;
+  private static final long serialVersionUID = 1L;
 
-  public KucoinException(
-      @JsonProperty("timestamp") Long timestamp,
-      @JsonProperty("status") int status,
-      @JsonProperty("error") String error,
-      @JsonProperty("message") String message,
-      @JsonProperty("path") String path
-  ) {
-    this.timestamp = timestamp;
-    this.status = status;
-    this.error = error;
-    this.message = message;
-    this.path = path;
-  }
+  @JsonProperty("code")
+  private String code;
 
-  public Long getTimestamp() {
-    return timestamp;
-  }
+  @JsonProperty("msg")
+  private String msg;
 
-  public int getStatus() {
-    return status;
-  }
+  @JsonProperty("success")
+  private boolean success;
 
-  public String getError() {
-    return error;
-  }
+  @JsonProperty("timestamp")
+  private long timestamp;
+
+  @JsonIgnore private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
   @Override
   public String getMessage() {
-    return message;
+    return String.format("%s - %s (HTTP status code: %d)", code, msg, getHttpStatusCode());
   }
 
-  public String getPath() {
-    return path;
+  @JsonProperty("code")
+  public String getCode() {
+    return code;
+  }
+
+  @JsonProperty("code")
+  public void setCode(String code) {
+    this.code = code;
+  }
+
+  @JsonProperty("msg")
+  public String getMsg() {
+    return msg;
+  }
+
+  @JsonProperty("msg")
+  public void setMsg(String msg) {
+    this.msg = msg;
+  }
+
+  @JsonProperty("success")
+  public boolean isSuccess() {
+    return success;
+  }
+
+  @JsonProperty("success")
+  public void setSuccess(boolean success) {
+    this.success = success;
+  }
+
+  @JsonProperty("timestamp")
+  public long getTimestamp() {
+    return timestamp;
+  }
+
+  @JsonProperty("timestamp")
+  public void setTimestamp(long timestamp) {
+    this.timestamp = timestamp;
+  }
+
+  @JsonAnyGetter
+  public Map<String, Object> getAdditionalProperties() {
+    return this.additionalProperties;
+  }
+
+  @JsonAnySetter
+  public void setAdditionalProperty(String name, Object value) {
+    this.additionalProperties.put(name, value);
   }
 }

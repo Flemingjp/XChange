@@ -1,45 +1,100 @@
 package org.knowm.xchange.kucoin.service;
 
 import java.io.IOException;
+import java.sql.Date;
 import java.util.List;
 import java.util.stream.Collectors;
-
 import org.knowm.xchange.Exchange;
 import org.knowm.xchange.currency.CurrencyPair;
 import org.knowm.xchange.dto.marketdata.OrderBook;
 import org.knowm.xchange.dto.marketdata.Ticker;
+import org.knowm.xchange.dto.marketdata.Trade;
 import org.knowm.xchange.dto.marketdata.Trades;
-import org.knowm.xchange.exceptions.NotYetImplementedForExchangeException;
-import org.knowm.xchange.kucoin.KucoinAdapters;
+import org.knowm.xchange.dto.marketdata.Trades.TradeSortType;
+import org.knowm.xchange.dto.meta.ExchangeMetaData;
+import org.knowm.xchange.kucoin.dto.KucoinAdapters;
+import org.knowm.xchange.kucoin.dto.KucoinResponse;
+import org.knowm.xchange.kucoin.dto.marketdata.KucoinDealOrder;
 import org.knowm.xchange.service.marketdata.MarketDataService;
+import org.knowm.xchange.service.marketdata.params.Params;
 
 /**
- * @author Jan Akerman
+ * Implementation of the market data service for Bittrex
+ *
+ * <ul>
+ *   <li>Provides access to various market data values
+ * </ul>
  */
-public class KucoinMarketDataService extends KucoinMarketDataServiceRaw implements MarketDataService {
+public class KucoinMarketDataService extends KucoinMarketDataServiceRaw
+    implements MarketDataService {
 
+  /**
+   * Constructor
+   *
+   * @param exchange
+   */
   public KucoinMarketDataService(Exchange exchange) {
+
     super(exchange);
   }
 
   @Override
   public Ticker getTicker(CurrencyPair currencyPair, Object... args) throws IOException {
-    return KucoinAdapters.adaptTicker(getKucoinTicker(currencyPair));
+    return KucoinAdapters.adaptTicker(getKucoinTicker(currencyPair).getData());
+  }
+
+  @Override
+  public List<Ticker> getTickers(Params params) throws IOException {
+    return getKucoinTickers()
+        .getData()
+        .stream()
+        .map(KucoinAdapters::adaptTicker)
+        .collect(Collectors.toList());
   }
 
   @Override
   public OrderBook getOrderBook(CurrencyPair currencyPair, Object... args) throws IOException {
-    throw new NotYetImplementedForExchangeException("Not yet implemented for this exchange");
+
+    Integer limit = null;
+
+    if (args != null && args.length > 0) {
+      if (args[0] instanceof Integer && (Integer) args[0] > 0) {
+        limit = (Integer) args[0];
+      }
+    }
+    return KucoinAdapters.adaptOrderBook(getKucoinOrderBook(currencyPair, limit), currencyPair);
   }
 
   @Override
   public Trades getTrades(CurrencyPair currencyPair, Object... args) throws IOException {
-    throw new NotYetImplementedForExchangeException("Not yet implemented for this exchange");
+
+    Integer limit = null;
+    Long since = null;
+
+    if (args != null && args.length > 0) {
+      if (args[0] instanceof Integer && (Integer) args[0] > 0) {
+        limit = (Integer) args[0];
+      }
+      if (args.length > 1) {
+        if (args[1] instanceof Date) {
+          since = ((Date) args[1]).getTime();
+        }
+      }
+    }
+
+    KucoinResponse<List<KucoinDealOrder>> response = getKucoinTrades(currencyPair, limit, since);
+    List<Trade> trades =
+        response
+            .getData()
+            .stream()
+            .map(o -> KucoinAdapters.adaptTrade(o, currencyPair))
+            .collect(Collectors.toList());
+    return new Trades(trades, TradeSortType.SortByTimestamp);
   }
 
-  public List<Ticker> getTickers() throws IOException {
-    return getKucoinTickers().stream()
-        .map(KucoinAdapters::adaptTicker)
-        .collect(Collectors.toList());
+  public ExchangeMetaData getMetadata() throws IOException {
+
+    return KucoinAdapters.adaptExchangeMetadata(
+        getKucoinTickers().getData(), getKucoinCurrencies().getData());
   }
 }

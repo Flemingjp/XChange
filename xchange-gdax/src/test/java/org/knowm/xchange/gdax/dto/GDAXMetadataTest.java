@@ -2,20 +2,18 @@ package org.knowm.xchange.gdax.dto;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.InputStream;
-
 import org.junit.Test;
 import org.knowm.xchange.Exchange;
 import org.knowm.xchange.ExchangeFactory;
 import org.knowm.xchange.ExchangeSpecification;
+import org.knowm.xchange.currency.CurrencyPair;
 import org.knowm.xchange.dto.meta.ExchangeMetaData;
 import org.knowm.xchange.gdax.GDAXAdapters;
 import org.knowm.xchange.gdax.GDAXExchange;
 import org.knowm.xchange.gdax.dto.marketdata.GDAXProduct;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import si.mazi.rescu.serialization.jackson.DefaultJacksonObjectMapperFactory;
 import si.mazi.rescu.serialization.jackson.JacksonObjectMapperFactory;
 
@@ -27,15 +25,15 @@ public class GDAXMetadataTest {
     JacksonObjectMapperFactory factory = new DefaultJacksonObjectMapperFactory();
     ObjectMapper mapper = factory.createObjectMapper();
 
-    InputStream is = getClass().getResourceAsStream("/products.json");
+    InputStream is = getClass().getResourceAsStream("/org/knowm/xchange/gdax/dto/products.json");
     GDAXProduct[] products = mapper.readValue(is, GDAXProduct[].class);
-    assertThat(products).hasSize(9);
+    assertThat(products).hasSize(10);
 
     ExchangeSpecification specification = new ExchangeSpecification(GDAXExchange.class);
     specification.setShouldLoadRemoteMetaData(false);
     Exchange exchange = ExchangeFactory.INSTANCE.createExchange(specification);
     ExchangeMetaData exchangeMetaData = exchange.getExchangeMetaData();
     exchangeMetaData = GDAXAdapters.adaptToExchangeMetaData(exchangeMetaData, products);
-
+    assertThat(exchangeMetaData.getCurrencyPairs().get(CurrencyPair.ETC_BTC).getPriceScale()).isEqualTo(5);
   }
 }
